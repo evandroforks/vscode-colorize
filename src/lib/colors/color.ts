@@ -36,6 +36,8 @@ class Color implements IColor {
    * @memberOf Color
    */
   public positionInText: number;
+
+  public raw: string;
   /**
    * Creates an instance of Color.
    *
@@ -46,11 +48,12 @@ class Color implements IColor {
    *
    * @memberOf Color
    */
-  public constructor(value: string, positionInText: number = 0, rgb: number[], alpha?: number) {
+  public constructor(value: string, positionInText: number = 0, rgb: number[], alpha?: number, raw?: string) {
     this.value = value;
     this.positionInText = positionInText;
     this.alpha = alpha || 1;
     this.rgb = rgb;
+    this.raw = raw || value;
   }
   /**
    * Generate the color string rgb representation

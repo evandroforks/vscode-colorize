@@ -10,6 +10,8 @@ export const REGEXP = new RegExp(`(\\$(?:[_a-z]+[\\-_a-z\\d]*)(?!:))${EOL}`, 'gi
 export const REGEXP_ONE = new RegExp(`^(\\$(?:[_a-z]+[\\-_a-z\\d]*)(?!:))${EOL}`, 'i');
 export const DECLARATION_REGEXP = new RegExp(`(?:(\\$(?:[_a-z]+[\\-_a-z\\d]*)\\s*):)${EOL}`, 'gi');
 
+export const FUNCTION_REGEXP = /((?:rgb|hsl)[a]?\((.*)\))(?:$|"|'|,| |;|\)|\r|\n)/gi;
+
 class SassExtractor implements IVariableStrategy {
   name: string = 'SASS';
   private store: VariablesStore = new VariablesStore();
@@ -18,10 +20,15 @@ class SassExtractor implements IVariableStrategy {
     return fileLines.map(({text, line}) => this.__extractDeclarations(fileName, text, line)).length;
   }
   public __extractDeclarations(fileName: string, text: string, line: number) {
+    const e = this.extractFunction(fileName, [{line, text}])[0];
+    text = e.text;
+
     let match = null;
     while ((match = DECLARATION_REGEXP.exec(text)) !== null) {
       const varName = (match[1] || match[2]).trim();
-      let color = ColorExtractor.extractOneColor(text.slice(match.index + match[0].length).trim()) || this.extractVariable(fileName, text.slice(match.index + match[0].length).trim());
+      const raw = text.slice(match.index + match[0].length).trim();
+
+      let color = ColorExtractor.extractOneColor(raw) || this.extractVariable(fileName, raw) || new Color('', 0, [], 0, raw.replace(new RegExp(';', 'g'), ''));
       if (this.store.has(varName, fileName, line)) {
         const decoration = this.store.findDeclaration(varName, fileName, line);
         decoration.update(<Color>color);
@@ -32,6 +39,10 @@ class SassExtractor implements IVariableStrategy {
     }
   }
   extractVariables(fileName: string, fileLines: DocumentLine[]): Promise<LineExtraction[]> {
+    this.extractFunction(fileName, fileLines);
+    return this._extractVariables(fileName, fileLines);
+  }
+  _extractVariables(fileName: string, fileLines: DocumentLine[]): Promise<LineExtraction[]> {
     const variables = fileLines.map(({line, text}) => {
       let match = null;
       let colors: Variable[] = [];
@@ -47,7 +58,7 @@ class SassExtractor implements IVariableStrategy {
           // const declaration = { fileName, line }; //or null
           const declaration = null;
           if (decoration.color) {
-            variable = new Variable(varName, new Color(varName, match.index, decoration.color.rgb, decoration.color.alpha), declaration);
+            variable = new Variable(varName, new Color(varName, match.index, decoration.color.rgb, decoration.color.alpha, decoration.color.raw), declaration);
           } else {
             variable = new Variable(varName, new Color(varName, match.index, null), declaration);
           }
@@ -66,6 +77,26 @@ class SassExtractor implements IVariableStrategy {
     }
     return variable ? variable.color : undefined;
   }
+
+  extractFunction(fileName: string, fileLines: DocumentLine[]) {
+    return fileLines.map(({line, text}) => {
+      let match = null;
+      let colors: Variable[] = [];
+      while ((match = FUNCTION_REGEXP.exec(text)) !== null) {
+        const variables = this._extractVariables(fileName, [{line, text: match[2]}]);
+        if (variables) {
+          const { colors } = variables[0];
+          const value = colors.reduce((vp: string[], vc: Variable) => {
+            vp.push(vc.color.raw);
+            return vp;
+          }, []).join(',');
+          text = text.replace(match[2], value);
+        }
+      }
+      return {line, text};
+    });
+  }
+
   variablesCount() {
     return this.store.count;
   }
