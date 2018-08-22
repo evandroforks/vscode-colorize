@@ -15,7 +15,7 @@ class StylusExtractor implements IVariableStrategy {
   name: string = 'STYLUS';
   private store: VariablesStore = new VariablesStore();
 
-  public async extractDeclarations(fileName: string, fileLines: DocumentLine[]): Promise<number> {
+  public extractDeclarations(fileName: string, fileLines: DocumentLine[]): number {
     return fileLines.map(({text, line}) => this.__extractDeclarations(fileName, text, line)).length;
   }
   public __extractDeclarations(fileName: string, text: string, line: number) {
@@ -35,7 +35,7 @@ class StylusExtractor implements IVariableStrategy {
       }
     }
   }
-  extractVariables(fileName: string, fileLines: DocumentLine[]): Promise<LineExtraction[]> {
+  extractVariables(fileName: string, fileLines: DocumentLine[]): LineExtraction[] {
     const variables = fileLines.map(({line, text}) => {
       let match = null;
       let colors: Variable[] = [];

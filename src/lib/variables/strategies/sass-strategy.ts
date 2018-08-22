@@ -16,7 +16,7 @@ class SassExtractor implements IVariableStrategy {
   name: string = 'SASS';
   private store: VariablesStore = new VariablesStore();
 
-  public async extractDeclarations(fileName: string, fileLines: DocumentLine[]): Promise<number> {
+  public extractDeclarations(fileName: string, fileLines: DocumentLine[]): number {
     return fileLines.map(({text, line}) => this.__extractDeclarations(fileName, text, line)).length;
   }
   public __extractDeclarations(fileName: string, text: string, line: number) {
@@ -38,11 +38,11 @@ class SassExtractor implements IVariableStrategy {
       }
     }
   }
-  extractVariables(fileName: string, fileLines: DocumentLine[]): Promise<LineExtraction[]> {
+  extractVariables(fileName: string, fileLines: DocumentLine[]): LineExtraction[] {
     this.extractFunction(fileName, fileLines);
     return this._extractVariables(fileName, fileLines);
   }
-  _extractVariables(fileName: string, fileLines: DocumentLine[]): Promise<LineExtraction[]> {
+  _extractVariables(fileName: string, fileLines: DocumentLine[]): LineExtraction[] {
     const variables = fileLines.map(({line, text}) => {
       let match = null;
       let colors: Variable[] = [];
@@ -55,7 +55,6 @@ class SassExtractor implements IVariableStrategy {
             decoration = this.store.findClosestDeclaration(varName, '.');
           }
           let variable;
-          // const declaration = { fileName, line }; //or null
           const declaration = null;
           if (decoration.color) {
             variable = new Variable(varName, new Color(varName, match.index, decoration.color.rgb, decoration.color.alpha, decoration.color.raw), declaration);
@@ -84,7 +83,8 @@ class SassExtractor implements IVariableStrategy {
       let colors: Variable[] = [];
       while ((match = FUNCTION_REGEXP.exec(text)) !== null) {
         const variables = this._extractVariables(fileName, [{line, text: match[2]}]);
-        if (variables) {
+        // console.log(variables)
+        if (variables.length > 0) {
           const { colors } = variables[0];
           const value = colors.reduce((vp: string[], vc: Variable) => {
             vp.push(vc.color.raw);

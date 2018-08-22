@@ -14,7 +14,7 @@ class CssExtractor implements IVariableStrategy {
   public name: string = 'CSS';
   private store: VariablesStore = new VariablesStore();
 
-  public async extractDeclarations(fileName: string, fileLines: DocumentLine[]): Promise<number> {
+  public extractDeclarations(fileName: string, fileLines: DocumentLine[]): number {
     return fileLines.map(({text, line}) => this.__extractDeclarations(fileName, text, line)).length;
   }
   public __extractDeclarations(fileName: string, text: string, line: number) {
@@ -31,7 +31,7 @@ class CssExtractor implements IVariableStrategy {
       }
     }
   }
-  public extractVariables(fileName: string, fileLines: DocumentLine[]): Promise<LineExtraction[]> {
+  public extractVariables(fileName: string, fileLines: DocumentLine[]): LineExtraction[] {
     const variables = fileLines.map(({line, text}) => {
       let match: RegExpExecArray = null;
       let colors: Variable[] = [];

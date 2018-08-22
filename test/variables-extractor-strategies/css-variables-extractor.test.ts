@@ -55,7 +55,7 @@ describe('Test decoration generation', () => {
 
   it('The generated decoration should contain (var)', async function() {
     const extractor = new CssExtractor();
-    await extractor.extractDeclarations('fileName', [{line: 0, text: '--darken: blue'}]);
+    extractor.extractDeclarations('fileName', [{line: 0, text: '--darken: blue'}]);
     const variables = await extractor.extractVariables('fileName', [{line: 0, text: 'var(--darken);'}]);
     assert.lengthOf(variables, 1);
     assert.lengthOf(variables[0].colors, 1);
@@ -68,7 +68,7 @@ describe('Test decoration generation', () => {
 
   it('The generated decoration should surround the variable use', async function() {
     const extractor = new CssExtractor();
-    await extractor.extractDeclarations('fileName', [{line: 0, text: '--darken: blue'}]);
+    extractor.extractDeclarations('fileName', [{line: 0, text: '--darken: blue'}]);
     const variables = await extractor.extractVariables('fileName', [{line: 0, text: 'color: var(--darken);'}]);
     assert.lengthOf(variables, 1);
     assert.lengthOf(variables[0].colors, 1);
